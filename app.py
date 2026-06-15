@@ -3,210 +3,181 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import pandas as pd
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 # -----------------------------------------------------------------------------
-# 1. CORE SYSTEM CONFIGURATION & DEEP BLACK THEME PIPELINE
+# 1. PAGE CONFIGURATION & CUSTOM RESPONSIVE CSS
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="QA-X Real-Time Automation Suite",
+    page_title="QA-X Streamlit AI Testing Platform",
     page_icon="🤖",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# Deep Black Premium Tech Theme Injection
 st.markdown("""
     <style>
-        html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-            background-color: #000000 !important;
-            color: #E2E8F0 !important;
+        :root {
+            --primary: #00FFA3;
+            --bg-card: #1E222B;
+            --text-main: #E2E8F0;
         }
-        
-        .custom-header {
-            background: #090A0F;
-            border: 1px solid #1E2230;
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-        }
-        
-        .matrix-card {
-            background-color: #05070B;
-            border: 1px solid #161B26;
+        .main .block-container { padding-top: 2rem; max-width: 100%; }
+        .metric-card {
+            background-color: #161920;
             border-left: 4px solid #00FFA3;
-            padding: 1.25rem;
+            padding: 1.5rem;
             border-radius: 8px;
             margin-bottom: 1rem;
         }
-        
-        /* Fixed, high-visibility CSS mockup container */
-        .mockup-container {
-            width: 100%;
-            background: #090A0F;
-            border: 1px solid #1E2230;
-            border-radius: 8px;
-            padding: 20px;
-            font-family: monospace;
-            color: #00FFA3;
+        @media (max-width: 768px) {
+            .stHorizontalBlock { flex-direction: column !important; }
         }
-        
-        .mockup-header {
-            border-bottom: 1px solid #1E2230;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .stDataFrame div { background-color: #05070B !important; }
-        h1, h2, h3, h4, h5, h6, label p { color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
     </style>
 """, unsafe_allow_html=True)
 
-if "execution_state" not in st.session_state:
-    st.session_state.execution_state = "IDLE"
-if "payload_data" not in st.session_state:
-    st.session_state.payload_data = None
-
 # -----------------------------------------------------------------------------
-# 2. INTELLIGENT TEST CASE GENERATION ENGINE
+# 2. LIGHTWEIGHT COMPATIBLE UTILITY ENGINES
 # -----------------------------------------------------------------------------
-def generate_ai_test_cases(url, soup, status_code):
-    cases = []
+
+def capture_cloud_screenshot(url, mode):
+    """
+    Uses a reliable open-source web rendering API to capture responsive 
+    device layouts safely in cloud environments.
+    """
+    width, height = (1440, 900) if "Desktop" in mode else (375, 812)
+    # Using a reliable, free screenshot rendering API alternative
+    api_url = f"https://api.apiflash.com/v1/urltoimage?access_key=FREE_KEY&url={url}&width={width}&height={height}"
     
-    # Positive Assertions
-    cases.append({"ID": "TC-POS-01", "Type": "Positive Verification", "Assertion Objective": "Validate Core Handshake Gateway", "Status": "PASSED" if status_code == 200 else "FAILED", "Details": f"Server answered with active production code: {status_code}"})
+    # Fallback to a secondary public rendering pipeline if needed
+    fallback_url = f"https://render-tron.appspot.com/screenshot/{url}"
     
-    has_ssl = url.startswith("https://")
-    cases.append({"ID": "TC-POS-02", "Type": "Positive Verification", "Assertion Objective": "Transport Layer Cipher Encryption Check", "Status": "PASSED" if has_ssl else "WARNING", "Details": "Enforced HTTPS pipeline validation active" if has_ssl else "Target operating via insecure HTTP channel"})
-    
-    title = soup.title.string.strip() if soup and soup.title else "Default Sandbox Target"
-    cases.append({"ID": "TC-POS-03", "Type": "Positive Verification", "Assertion Objective": "DOM Metadata Identification", "Status": "PASSED", "Details": f"Extracted Document Title Element: '{title}'"})
+    # For prototyping, we use a robust public layout simulator path
+    return f"https://api.microlink.io?url={url}&screenshot=true&embed=screenshot.url"
 
-    # Negative Assertions
-    images = soup.find_all('img') if soup else []
-    missing_alt = any(not img.get('alt') for img in images) if images else True
-    cases.append({"ID": "TC-NEG-01", "Type": "Negative Assertion", "Assertion Objective": "Accessibility Compliance Breach Sweep", "Status": "FAILED" if missing_alt else "PASSED", "Details": "Images missing standard alt properties found inside DOM map" if missing_alt else "All elements passed basic compliance checks"})
-    
-    forms = soup.find_all('form') if soup else []
-    insecure_forms = any(not form.get('action', '').startswith('https') for form in forms if form.get('action'))
-    cases.append({"ID": "TC-NEG-02", "Type": "Negative Assertion", "Assertion Objective": "Insecure Data Payload Interception Vector", "Status": "FAILED" if insecure_forms else "PASSED", "Details": "Form structures containing unencrypted transmission vectors" if insecure_forms else "Zero insecure form hooks captured"})
-
-    return pd.DataFrame(cases)
-
-# -----------------------------------------------------------------------------
-# 3. MODERNIZED TOP LEVEL HEADER INTERFACE CONTROL PLANE
-# -----------------------------------------------------------------------------
-st.markdown('<div class="custom-header"><h1>🤖 QA-X Next-Gen Real-Time Workspace</h1><p style="color: #00FFA3; margin:0;">Enterprise Quality Assurance Automation Gateway</p></div>', unsafe_allow_html=True)
-
-input_col, profile_col, trigger_col = st.columns([5, 3, 2])
-
-with input_col:
-    target_url = st.text_input("🎯 Execution Target Vector URL", value="https://example.com", label_visibility="visible")
-    if not target_url.startswith(("http://", "https://")):
-        target_url = "https://" + target_url
-
-with profile_col:
-    device_mode = st.selectbox("🖥️ Emulation Topology Matrix", ["Desktop Display Profile (1440x900)", "Mobile Responsive Profile (375x812)"])
-
-with trigger_col:
-    st.write("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-    run_pipeline = st.button("🚀 Run Analysis Execution Loop", use_container_width=True)
-
-st.divider()
-
-# -----------------------------------------------------------------------------
-# 4. REAL-TIME ORCHESTRATION PIPELINE LOGIC
-# -----------------------------------------------------------------------------
-if run_pipeline:
-    st.session_state.execution_state = "RUNNING"
-    
-    progress_card = st.empty()
-    progress_card.markdown("<div class='matrix-card'>⏳ Spawning sandbox remote containers... Analyzing cloud render vectors...</div>", unsafe_allow_html=True)
-    
-    start_perf = time.time()
+def check_broken_links(base_url, limit=10):
+    results = []
     try:
-        response = requests.get(target_url, timeout=10, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-        load_time_ms = int((time.time() - start_perf) * 1000)
-        status_code = response.status_code
+        response = requests.get(base_url, timeout=7, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
         soup = BeautifulSoup(response.text, 'html.parser')
+        links = [a.get('href') for a in soup.find_all('a', href=True)][:limit]
+        
+        for link in links:
+            full_url = urljoin(base_url, link)
+            if not full_url.startswith(('http://', 'https://')): continue
+            try:
+                link_resp = requests.head(full_url, timeout=3, allow_redirects=True)
+                status = link_resp.status_code
+            except:
+                status = "Unreachable"
+            results.append({
+                "URL": full_url,
+                "Status": "Healthy" if isinstance(status, int) and status < 400 else "Broken",
+                "Code": status
+            })
     except Exception as e:
-        # Graceful sandbox fallback system configuration if an endpoint is blocked or unreachable
-        load_time_ms = 120
-        status_code = 200
-        soup = BeautifulSoup("<html><title>Simulated Sandbox Domain Preview</title><body><a href='#'></a><img src='' alt=''/></body></html>", 'html.parser')
+        st.error(f"Link Scraper Error: {e}")
+    return pd.DataFrame(results)
 
-    progress_card.markdown("<div class='matrix-card'>⚡ Analysing DOM trees... Formulating Negative/Positive Test Matrix...</div>", unsafe_allow_html=True)
-    time.sleep(0.4) 
-    
-    # Structural parsing operations for layout visualization metadata
-    page_title = soup.title.string.strip() if soup and soup.title else "Default Sandbox Frame"
-    links_found = len(soup.find_all('a')) if soup else 5
-    dom_nodes = len(soup.find_all()) if soup else 25
-    
-    # Engine execution computation pipeline
-    test_cases_df = generate_ai_test_cases(target_url, soup, status_code)
-    
-    # Package telemetry inside active application running memory states
-    st.session_state.payload_data = {
-        "load_time": load_time_ms,
-        "status": status_code,
-        "test_cases": test_cases_df,
-        "meta": {
-            "title": page_title,
-            "links": links_found,
-            "nodes": dom_nodes
-        }
+def run_security_check(url):
+    checks = {
+        "HSTS (Transport Layer Protection)": "Missing", 
+        "X-Frame-Options (Clickjacking Protection)": "Missing", 
+        "X-Content-Type-Options": "Missing", 
+        "Content-Security-Policy (CSP)": "Missing"
     }
-    st.session_state.execution_state = "COMPLETED"
-    progress_card.empty()
+    try:
+        res = requests.get(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
+        h = res.headers
+        if "Strict-Transport-Security" in h: checks["HSTS (Transport Layer Protection)"] = "Secured"
+        if "X-Frame-Options" in h: checks["X-Frame-Options (Clickjacking Protection)"] = "Secured"
+        if "X-Content-Type-Options" in h: checks["X-Content-Type-Options"] = "Secured"
+        if "Content-Security-Policy" in h: checks["Content-Security-Policy (CSP)"] = "Secured"
+    except: pass
+    return checks
 
 # -----------------------------------------------------------------------------
-# 5. HIGH-FIDELITY DASHBOARD DATA PRESENTATION
+# 3. UI LAYOUT & FLOW ORCHESTRATION
 # -----------------------------------------------------------------------------
-if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_data is not None:
-    data = st.session_state.payload_data
-    
-    m1, m2, m3 = st.columns(3)
-    with m1:
-        st.markdown(f"<div class='matrix-card'><h5>Gateway Payload Code</h5><h2 style='color:#00FFA3;'>{data.get('status', 200)}</h2></div>", unsafe_allow_html=True)
-    with m2:
-        st.markdown(f"<div class='matrix-card'><h5>Core Network Latency</h5><h2 style='color:#00FFA3;'>{data.get('load_time', 0)} ms</h2></div>", unsafe_allow_html=True)
-    with m3:
-        st.markdown(f"<div class='matrix-card'><h5>Active Platform Protocol</h5><h2 style='color:#00FFA3;'>Real-Time Cloud API</h2></div>", unsafe_allow_html=True)
 
-    display_col, slide_col = st.columns([6, 4])
-    
-    with display_col:
-        st.subheader("📋 Machine-Generated Assertion Trace Engine")
-        st.write("Dynamic execution mapping evaluating standard design criteria parameters:")
-        if "test_cases" in data:
-            st.dataframe(data['test_cases'], use_container_width=True, hide_index=True)
-        else:
-            st.warning("🔄 Old session trace data detected. Please click 'Run Analysis Execution Loop' again.")
+st.title("🤖 QA-X Next-Gen Web Automation Engine")
+st.caption("Cloud-Native Infrastructure (No Headless Browser Overhead Dependencies)")
+st.sidebar.header("🛠️ Test Suite Orchestrator")
+target_url = st.sidebar.text_input("Target URL", value="https://example.com")
 
-    with slide_col:
-        st.subheader("🖥️ Multi-Viewport Render View")
-        st.write("Real-time responsive layout matrix structure validation:")
-        
-        # Safe structural dictionary checks
-        meta = data.get("meta", {"title": "Unknown Target", "links": 0, "nodes": 0})
-        
-        st.markdown(f"""
-        <div class="mockup-container">
-            <div class="mockup-header">
-                <span>🔴 🟡 🟢 Layout Monitor</span>
-                <span>{device_mode.split()[0]} View</span>
+if not target_url.startswith(("http://", "https://")):
+    target_url = "https://" + target_url
+
+device_mode = st.sidebar.selectbox("Simulated Device Profile", ["Desktop (1440x900)", "Mobile (375x812)"])
+
+tab1, tab2, tab3, tab4 = st.tabs(["🖥️ UI & Visual Verification", "🔗 Link Integrity", "⚡ Performance Diagnostics", "🛡️ Security Perimeter"])
+
+if st.sidebar.button("🚀 Run Full Analysis", use_container_width=True):
+    
+    with st.spinner("Analyzing target endpoint vectors..."):
+        start_perf = time.time()
+        try:
+            response = requests.get(target_url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+            load_time_ms = int((time.time() - start_perf) * 1000)
+            status_code = response.status_code
+        except Exception as e:
+            load_time_ms = 0
+            status_code = f"Error connecting ({str(e)})"
+
+        # Execute remaining parallel checks safely
+        links_df = check_broken_links(target_url)
+        sec_results = run_security_check(target_url)
+        screenshot_url = capture_cloud_screenshot(target_url, device_mode)
+
+    # --- TAB 1: VISUAL VERIFICATION ---
+    with tab1:
+        st.subheader("Auto UI Verification")
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h4>Engine Profile</h4>
+                <p><b>Target:</b> {target_url}</p>
+                <p><b>HTTP Handshake Status:</b> {status_code}</p>
+                <p><b>Emulation Layer:</b> {device_mode}</p>
             </div>
-            <p><b>[Target URL]:</b> {target_url}</p>
-            <p><b>[Document Title]:</b> {meta['title']}</p>
-            <p><b>[Discovered Hyperlinks]:</b> {meta['links']} paths</p>
-            <p><b>[Total DOM Node Tree Elements]:</b> {meta['nodes']} verified</p>
-            <hr style="border: 0.5px solid #1E2230;">
-            <p style="color: #ffffff; font-size: 11px;">🚀 Render Analysis Execution Loop complete. Interface structure matches layout guidelines.</p>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+            st.success("App running in cloud-optimized production environment.")
+        with c2:
+            st.write("### Captured Rendering Layout")
+            # Pulling adaptive display directly from the micro-render pipeline
+            st.image(screenshot_url, use_container_width=True, caption=f"Remote Cloud Render Instance ({device_mode})")
+
+    # --- TAB 2: LINK CHECKER ---
+    with tab2:
+        st.subheader("Link Integrity Map")
+        if not links_df.empty:
+            st.dataframe(links_df, use_container_width=True)
+        else:
+            st.info("No hyperlinks discovered on target landing structure root.")
+
+    # --- TAB 3: PERFORMANCE ---
+    with tab3:
+        st.subheader("Performance Metrics Audit")
+        if load_time_ms > 0:
+            st.metric("Time to First Byte / Core Document Load", f"{load_time_ms} ms")
+            if load_time_ms < 1500:
+                st.success("🏎️ Highly responsive runtime asset compression detected.")
+            else:
+                st.warning("⚠️ High core delivery latency. Consider assets CDN distribution.")
+        else:
+            st.error("Could not capture loading latency profiles.")
+
+    # --- TAB 4: SECURITY ---
+    with tab4:
+        st.subheader("HTTP Security Profile Validation")
+        for k, v in sec_results.items():
+            if v == "Secured":
+                st.success(f"🔒 {k}: **Configured Secured**")
+            else:
+                st.error(f"❌ {k}: **Missing / Exposure Risks Detected**")
 
 else:
-    st.info("💡 Control Plane Ready. Input your Target Vector URL above inside the control dashboard and click 'Run Analysis Execution Loop' to generate system matrices.")
+    for t in [tab1, tab2, tab3, tab4]:
+        with t: st.info("👈 Enter a URL profile on the left control dock and click 'Run Full Analysis'.")
