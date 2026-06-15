@@ -31,7 +31,7 @@ st.markdown("""
 *, *::before, *::after { box-sizing: border-box; }
 html, body, [data-testid="stAppViewContainer"] {
     background: #f1f5f9 !important;
-    color: #E2E8F0;
+    color: #f1f5f9;
     font-family: 'Inter', sans-serif;
 }
 [data-testid="stAppViewContainer"] > .main { background: #0A0E1A !important; }
