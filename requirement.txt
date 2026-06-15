@@ -15,4 +15,4 @@ requests>=2.31.0
 
 # Data Manipulation & Metrics Matrix Layouts
 pandas>=2.1.0
-playwright
+  
