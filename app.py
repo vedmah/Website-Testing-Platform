@@ -30,7 +30,7 @@ st.markdown("""
 /* ── Reset & Base ── */
 *, *::before, *::after { box-sizing: border-box; }
 html, body, [data-testid="stAppViewContainer"] {
-    background: #0A0E1A !important;
+    background: #f1f5f9 !important;
     color: #E2E8F0;
     font-family: 'Inter', sans-serif;
 }
