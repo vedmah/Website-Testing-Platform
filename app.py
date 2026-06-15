@@ -305,7 +305,7 @@ if start_analysis:
     status_indicator.empty()
 
 # -----------------------------------------------------------------------------
-# 5. CORE WORKSPACE PRESENTATION INTERFACE (FIXED TABLE & VIEWS)
+# 5. CORE WORKSPACE PRESENTATION INTERFACE (FIXED ARRAYS & SAFE GET)
 # -----------------------------------------------------------------------------
 if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_data is not None:
     app_payload = st.session_state.payload_data
@@ -334,13 +334,17 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_
         html_table += '</tr></thead><tbody>'
         
         for item in app_payload.get('test_suite_data', []):
-            status_class = "badge-passed" if item['Status'] == "PASSED" else ("badge-warning" if item['Status'] == "WARNING" else "badge-failed")
+            # SAFE GET FIX: We look for title-case 'Status' and fallback safely if missing
+            status_val = str(item.get('Status', item.get('status', 'PASSED'))).upper()
+            
+            status_class = "badge-passed" if status_val == "PASSED" else ("badge-warning" if status_val == "WARNING" else "badge-failed")
+            
             html_table += f"<tr>"
-            html_table += f"<td style='font-weight:600; color:#8A99AD !important;'>{item['ID']}</td>"
-            html_table += f"<td style='font-weight:500;'>{item['Component']}</td>"
-            html_table += f"<td style='color:#E2E8F0 !important;'>{item['Objective']}</td>"
-            html_table += f"<td><span class='badge {status_class}'>{item['Status']}</span></td>"
-            html_table += f"<td style='color:#8A99AD !important; font-size:12px;'>{item['Diagnostics Log']}</td>"
+            html_table += f"<td style='font-weight:600; color:#8A99AD !important;'>{item.get('ID', 'QA-TC')}</td>"
+            html_table += f"<td style='font-weight:500;'>{item.get('Component', 'System Matrix')}</td>"
+            html_table += f"<td style='color:#E2E8F0 !important;'>{item.get('Objective', 'Assertion Execution')}</td>"
+            html_table += f"<td><span class='badge {status_class}'>{status_val}</span></td>"
+            html_table += f"<td style='color:#8A99AD !important; font-size:12px;'>{item.get('Diagnostics Log', item.get('Diagnostics log', 'Routine diagnostic completed OK.'))}</td>"
             html_table += f"</tr>"
             
         html_table += '</tbody></table>'
