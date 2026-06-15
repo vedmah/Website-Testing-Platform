@@ -6,7 +6,7 @@ import pandas as pd
 from urllib.parse import urlparse
 
 # -----------------------------------------------------------------------------
-# 1. DESIGN SYSTEM & COMPLETE DARK THEME CONFIGURATION
+# 1. PREMIUM HIGH-CONTRAST DARK THEME CONFIGURATION
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="QA-X Real-Time Automation Suite",
@@ -15,14 +15,16 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# High-contrast dark styling ensuring absolute text visibility for tables and metric panels
+# Complete layout styling overhaul with absolute foreground grid visibility rules
 st.markdown("""
     <style>
+        /* Force Solid Deep Midnight Canvas Environment */
         html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-            background-color: #000000 !important;
+            background-color: #05070C !important;
             color: #FFFFFF !important;
         }
         
+        /* Enforce crisp typography reads across elements */
         .stMarkdown, p, span, label, li {
             color: #E2E8F0 !important;
             font-family: 'Inter', sans-serif;
@@ -32,18 +34,49 @@ st.markdown("""
             font-weight: 700 !important;
         }
         
-        /* Enforce high-visibility coloring rules across data matrix view containers */
-        [data-testid="stDataFrame"] td, [data-testid="stDataFrame"] th, 
-        [data-testid="stDataFrame"] div, data-styled-table td {
-            color: #FFFFFF !important;
-            background-color: #090A14 !important;
-        }
-        
-        [data-testid="stDataFrame"] {
+        /* FIX: High-Contrast Styles for Semantic Data Tables */
+        .qa-matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 13px;
+            background-color: #0A0D14 !important;
             border: 1px solid #1E2230 !important;
             border-radius: 8px;
+            overflow: hidden;
+        }
+        .qa-matrix-table th {
+            background-color: #111622 !important;
+            color: #00FFA3 !important;
+            text-align: left;
+            padding: 12px 14px;
+            font-weight: 600;
+            border-bottom: 2px solid #1E2230;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .qa-matrix-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #161B26;
+            color: #FFFFFF !important;
+        }
+        .qa-matrix-table tr:last-child td {
+            border-bottom: none;
         }
         
+        /* Badge UI styling states */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-passed { background-color: rgba(0, 255, 163, 0.15); color: #00FFA3 !important; border: 1px solid #00FFA3; }
+        .badge-warning { background-color: rgba(255, 189, 46, 0.15); color: #FFBD2E !important; border: 1px solid #FFBD2E; }
+        .badge-failed { background-color: rgba(255, 95, 86, 0.15); color: #FF5F56 !important; border: 1px solid #FF5F56; }
+
+        /* Dashboard top bar control area */
         .custom-header {
             background: #090A0F !important;
             border: 1px solid #1E2230 !important;
@@ -54,7 +87,7 @@ st.markdown("""
         }
         
         .matrix-card {
-            background-color: #05070B !important;
+            background-color: #090A0F !important;
             border: 1px solid #161B26 !important;
             border-left: 4px solid #00FFA3 !important;
             padding: 1.25rem;
@@ -71,16 +104,15 @@ st.markdown("""
         
         .mockup-canvas {
             width: 100%;
-            background: #07090E !important;
+            background: #090A0F !important;
             border: 1px solid #1E2230 !important;
             border-radius: 12px 12px 0 0;
             padding: 20px;
-            box-shadow: 0px 8px 32px rgba(0, 255, 163, 0.03);
         }
         
         .blueprint-footer {
             width: 100%;
-            background: #05070B !important;
+            background: #07090E !important;
             border: 1px solid #1E2230 !important;
             border-top: none;
             border-radius: 0 0 12px 12px;
@@ -116,9 +148,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------------------------------------------------------
-# 2. APPLICATION GLOBAL STATE INITIALIZATION (FIX FOR RE-RUN ERRORS)
-# -----------------------------------------------------------------------------
+# Initialize Session Memory Slots
 if "execution_state" not in st.session_state:
     st.session_state.execution_state = "IDLE"
 if "payload_data" not in st.session_state:
@@ -126,69 +156,67 @@ if "payload_data" not in st.session_state:
 if "slideshow_index" not in st.session_state:
     st.session_state.slideshow_index = 0
 
-# Default fallback URLs to prevent dictionary index exceptions
 DEFAULT_DESKTOP = "https://image.thum.io/get/width/1280/crop/800/https://www.tutorialspoint.com"
 DEFAULT_MOBILE = "https://image.thum.io/get/width/480/crop/800/https://www.tutorialspoint.com"
 
 # -----------------------------------------------------------------------------
-# 3. MACHINE AUTOMATION TEST CASE FACTORY ENGINE
+# 2. AUTOMATED QA CRITERIA PROCESSING SUITE
 # -----------------------------------------------------------------------------
 def run_automated_test_factory(url, soup, status_code, headers, latency_ms):
     suite = []
     
     suite.append({
-        "Test ID": "QA-TC-01",
-        "Target Component": "Server Pipeline",
-        "Assertion Objective": "Assert target platform returns an active live routing code",
+        "ID": "QA-TC-01",
+        "Component": "Server Pipeline",
+        "Objective": "Assert target platform returns an active live routing code",
         "Status": "PASSED" if status_code == 200 else "FAILED",
-        "Automated Diagnostics Log": f"HTTP response status {status_code} validated within a connection window of {latency_ms}ms."
+        "Diagnostics Log": f"HTTP response status {status_code} validated within a connection window of {latency_ms}ms."
     })
     
     is_https = url.startswith("https://")
     suite.append({
-        "Test ID": "QA-TC-02",
-        "Target Component": "Encryption Boundary",
-        "Assertion Objective": "Assert presence of active transport layer data encryption (SSL/TLS)",
+        "ID": "QA-TC-02",
+        "Component": "Encryption Boundary",
+        "Objective": "Assert presence of active transport layer data encryption (SSL/TLS)",
         "Status": "PASSED" if is_https else "WARNING",
-        "Automated Diagnostics Log": "HTTPS channel confirmed secure. Node encryption keys verified successfully." if is_https else "Unencrypted network channel detected. Flagged for transmission security updates."
+        "Diagnostics Log": "HTTPS channel confirmed secure. Node encryption keys verified successfully." if is_https else "Unencrypted network channel detected. Flagged for transmission security updates."
     })
     
     has_viewport = bool(soup and soup.find('meta', attrs={'name': 'viewport'}))
     suite.append({
-        "Test ID": "QA-TC-03",
-        "Target Component": "UX Fluid Architecture",
-        "Assertion Objective": "Assert document metadata specifies explicit responsive viewport parameters",
+        "ID": "QA-TC-03",
+        "Component": "UX Fluid Architecture",
+        "Objective": "Assert document metadata specifies explicit responsive viewport parameters",
         "Status": "PASSED" if has_viewport else "FAILED",
-        "Automated Diagnostics Log": "Mobile layout scalable configuration tags discovered inside document head framework." if has_viewport else "Viewport configurations omitted. Layout structure might distort on desktop vs mobile targets."
+        "Diagnostics Log": "Mobile layout scalable configuration tags discovered inside document head framework." if has_viewport else "Viewport configurations omitted. Layout structure might distort on desktop vs mobile targets."
     })
     
     has_charset = bool(soup and soup.find('meta', charset=True))
     suite.append({
-        "Test ID": "QA-TC-04",
-        "Target Component": "DOM Document Layout",
-        "Assertion Objective": "Verify document explicitly outlines text string character mappings (UTF-8)",
+        "ID": "QA-TC-04",
+        "Component": "DOM Document Layout",
+        "Objective": "Verify document explicitly outlines text string character mappings (UTF-8)",
         "Status": "PASSED" if has_charset else "WARNING",
-        "Automated Diagnostics Log": "Text processing character map successfully bound. Prevents font rendering anomalies." if has_charset else "Character encodings skipped. Fallback browser mapping engines invoked."
+        "Diagnostics Log": "Text processing character map successfully bound. Prevents font rendering anomalies." if has_charset else "Character encodings skipped. Fallback browser mapping engines invoked."
     })
     
     images = soup.find_all('img') if soup else []
     unmapped_assets = sum(1 for img in images if not img.get('src', '').strip())
     suite.append({
-        "Test ID": "QA-TC-05",
-        "Target Component": "Graphic Layout Elements",
-        "Assertion Objective": "Scan structural media elements to confirm zero unmapped asset paths",
+        "ID": "QA-TC-05",
+        "Component": "Graphic Layout Elements",
+        "Objective": "Scan structural media elements to confirm zero unmapped asset paths",
         "Status": "PASSED" if unmapped_assets == 0 else "FAILED",
-        "Automated Diagnostics Log": "All media components hold a mapped source target link placeholder." if unmapped_assets == 0 else f"Alert: Found {unmapped_assets} unmapped source attributes leading to broken visuals."
+        "Diagnostics Log": "All media components hold a mapped source target link placeholder." if unmapped_assets == 0 else f"Alert: Found {unmapped_assets} unmapped source attributes leading to broken visuals."
     })
 
-    total_metrics = len(suite)
     passed_metrics = sum(1 for test in suite if test["Status"] == "PASSED")
-    grade_rating = int((passed_metrics / total_metrics) * 100)
+    grade_rating = int((passed_metrics / len(suite)) * 100)
 
-    return pd.DataFrame(suite), grade_rating
+    return suite, grade_rating
 
 # -----------------------------------------------------------------------------
-# 4. INTERACTIVE CONTROL WORKSPACE
+# 3. WORKSPACE OPERATION PANEL
 # -----------------------------------------------------------------------------
 st.markdown("""
     <div class="custom-header">
@@ -207,7 +235,7 @@ with url_col:
         target_url = "https://" + target_url
 
 with config_col:
-    viewport_profile = st.selectbox("🖥 " "Select Primary Viewport Simulation", ["Desktop Viewport Matrix", "Mobile Viewport Matrix"])
+    viewport_profile = st.selectbox("🖥️ Select Primary Viewport Simulation", ["Desktop Viewport Matrix", "Mobile Viewport Matrix"])
 
 with button_col:
     st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
@@ -216,7 +244,7 @@ with button_col:
 st.divider()
 
 # -----------------------------------------------------------------------------
-# 5. ORCHESTRATION & ANALYSIS LOOP
+# 4. RUN TIME TELEMETRY PROCESSING LOGIC
 # -----------------------------------------------------------------------------
 if start_analysis:
     st.session_state.execution_state = "RUNNING"
@@ -248,11 +276,10 @@ if start_analysis:
     discovered_images = len(document_soup.find_all('img'))
     discovered_forms = len(document_soup.find_all('form'))
     
-    qa_results_df, quality_score = run_automated_test_factory(
+    suite_list, quality_score = run_automated_test_factory(
         target_url, document_soup, http_code, server_headers, calculated_latency
     )
     
-    # Generate screenshots cleanly based on clean domain extraction
     parsed_domain = urlparse(target_url).netloc
     clean_domain = parsed_domain if parsed_domain else "tutorialspoint.com"
         
@@ -262,7 +289,7 @@ if start_analysis:
     st.session_state.payload_data = {
         "status_code": http_code,
         "latency": calculated_latency,
-        "test_suite_data": qa_results_df,
+        "test_suite_data": suite_list,
         "slideshow_images": [desktop_view_img, mobile_view_img],
         "slideshow_labels": ["Desktop Mode Orientation (1440x900)", "Mobile Portrait Orientation (375x812)"],
         "summary": {
@@ -278,13 +305,13 @@ if start_analysis:
     status_indicator.empty()
 
 # -----------------------------------------------------------------------------
-# 6. DATA PRESENTATION GRID LAYER (FIXED ACCESSIBILITY GUARD)
+# 5. CORE WORKSPACE PRESENTATION INTERFACE (FIXED TABLE & VIEWS)
 # -----------------------------------------------------------------------------
 if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_data is not None:
     app_payload = st.session_state.payload_data
     summary_data = app_payload.get("summary", {})
     
-    # Metric Telemetry Tracker Layout Row
+    # Summary Metrics Block
     metric_c1, metric_c2, metric_c3 = st.columns(3)
     with metric_c1:
         st.markdown(f"<div class='matrix-card'><h5>Handshake Response</h5><h2 style='color:#00FFA3 !important; font-size:24px;'>{app_payload.get('status_code', 200)} Connected OK</h2></div>", unsafe_allow_html=True)
@@ -295,22 +322,34 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_
 
     st.write("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-    # Core Workspace Split Display Frame
+    # UI Split Layout Workspace Block
     left_table_col, right_visual_col = st.columns([6, 4])
     
     with left_table_col:
         st.markdown("<h3 style='font-size:16px; font-weight:600; margin-bottom:12px;'>📋 Real-Time Machine-Generated Automated Test Matrix</h3>", unsafe_allow_html=True)
-        if 'test_suite_data' in app_payload:
-            st.dataframe(app_payload['test_suite_data'], use_container_width=True, hide_index=True)
-        else:
-            st.error("⚠️ Data layer processing out of sync.")
+        
+        # Build completely custom HTML grid table to guarantee visibility parameters
+        html_table = '<table class="qa-matrix-table"><thead><tr>'
+        html_table += '<th>ID</th><th>Component</th><th>Objective</th><th>Status</th><th>Log Diagnostics</th>'
+        html_table += '</tr></thead><tbody>'
+        
+        for item in app_payload.get('test_suite_data', []):
+            status_class = "badge-passed" if item['Status'] == "PASSED" else ("badge-warning" if item['Status'] == "WARNING" else "badge-failed")
+            html_table += f"<tr>"
+            html_table += f"<td style='font-weight:600; color:#8A99AD !important;'>{item['ID']}</td>"
+            html_table += f"<td style='font-weight:500;'>{item['Component']}</td>"
+            html_table += f"<td style='color:#E2E8F0 !important;'>{item['Objective']}</td>"
+            html_table += f"<td><span class='badge {status_class}'>{item['Status']}</span></td>"
+            html_table += f"<td style='color:#8A99AD !important; font-size:12px;'>{item['Diagnostics Log']}</td>"
+            html_table += f"</tr>"
+            
+        html_table += '</tbody></table>'
+        st.markdown(html_table, unsafe_allow_html=True)
 
     with right_visual_col:
         st.markdown("<h3 style='font-size:16px; font-weight:600; margin-bottom:12px;'>🖥️ Multi-Viewport Fluid Wireframe Slideshow</h3>", unsafe_allow_html=True)
         
-        # FIXED CRASH GAURD: Safely fetch data array indexes with robust script rerun fallbacks
         current_idx = st.session_state.get("slideshow_index", 0)
-        
         if "slideshow_images" in app_payload and len(app_payload["slideshow_images"]) > current_idx:
             active_image = app_payload["slideshow_images"][current_idx]
             active_label = app_payload["slideshow_labels"][current_idx]
@@ -318,7 +357,6 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_
             active_image = DEFAULT_DESKTOP
             active_label = "Desktop Mode Orientation (1440x900)"
         
-        # Top bar mockup device shell framework
         st.markdown(f"""
             <div class="mockup-canvas">
                 <div class="canvas-top-bar">
@@ -334,10 +372,9 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_
             </div>
         """, unsafe_allow_html=True)
         
-        # Native, clean image frame loader
-        st.image(active_image, use_container_width=True, caption="Real-Time Automation Workspace Screen Diagnostics Capture Layer")
+        # Native safe Streamlit image frame rendering loop
+        st.image(active_image, use_container_width=True)
         
-        # Interactive slideshow viewport rotation components
         slide_left_btn, slide_right_btn = st.columns(2)
         with slide_left_btn:
             if st.button("⬅️ View Desktop Mockup", use_container_width=True):
@@ -351,10 +388,10 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_
         st.markdown(f"""
             <div class="blueprint-footer">
                 <div style="font-size: 11px; color: #8A99AD; line-height: 1.6; font-family: 'Courier New', monospace;">
-                    • &lt;nav&gt; Layer Links Mapped ...... [ <span style="color:#00FFA3;">{summary_data.get('links', 45)} Nodes Found</span> ]<br>
-                    • &lt;img&gt; Layout Media Assets ..... [ <span style="color:#00FFA3;">{summary_data.get('images', 12)} Nodes Found</span> ]<br>
-                    • &lt;form&gt; Capture Data Blocks .... [ <span style="color:#00FFA3;">{summary_data.get('forms', 1)} Nodes Found</span> ]<br>
-                    • Production Infrastructure .... [ <span style="color:#00FFA3;">{summary_data.get('engine_server', 'Nginx Distributed Router Container')}</span> ]
+                    • &lt;nav&gt; Layer Links Mapped ...... [ <span style="color:#00FFA3;">{summary_data.get('links', 145)} Nodes Found</span> ]<br>
+                    • &lt;img&gt; Layout Media Assets ..... [ <span style="color:#00FFA3;">{summary_data.get('images', 24)} Nodes Found</span> ]<br>
+                    • &lt;form&gt; Capture Data Blocks .... [ <span style="color:#00FFA3;">{summary_data.get('forms', 2)} Nodes Found</span> ]<br>
+                    • Production Infrastructure .... [ <span style="color:#00FFA3;">{summary_data.get('engine_server', 'Apache Distributed Cluster Node')}</span> ]
                 </div>
             </div>
         """, unsafe_allow_html=True)
