@@ -1,8 +1,1 @@
-libnss3
-libxss1
-libasound2
-libnss3-dev
-libx11-xcb1
-libudev1
-libvulkan1
-xvfb
+playwright
