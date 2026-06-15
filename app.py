@@ -47,8 +47,11 @@ async def run_playwright_test(url, viewport_width, viewport_height):
     metrics = {"status": "Failed", "load_time_ms": 0, "screenshot": None, "console_logs": []}
     try:
         async with async_playwright() as p:
-            # Note: SlowMo helps bypass some basic bot detection
-            browser = await p.chromium.launch(headless=True)
+            # Added custom cloud arguments to prevent system execution crashes on Streamlit Cloud
+            browser = await p.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"]
+            )
             context = await browser.new_context(viewport={'width': viewport_width, 'height': viewport_height})
             page = await context.new_page()
             
@@ -112,7 +115,7 @@ def run_security_check(url):
 # 3. UI LAYOUT
 # -----------------------------------------------------------------------------
 
-st.title("🤖 QA-X Next-Gen Web Automation")
+st.title("🤖 QA-X Next-Gen Web Automation Engine")
 st.sidebar.header("🛠️ Test Suite Orchestrator")
 target_url = st.sidebar.text_input("Target URL", value="https://example.com")
 
@@ -127,7 +130,7 @@ tab1, tab2, tab3, tab4 = st.tabs(["🖥️ UI Verification", "🔗 Links", "⚡ 
 # --- EXECUTION ENGINE ---
 if st.sidebar.button("🚀 Run Full Analysis", use_container_width=True):
     
-    # 1. Setup Event Loop for Playwright
+    # Explicit loop initialization for stable execution inside Streamlit worker threads
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
@@ -135,9 +138,7 @@ if st.sidebar.button("🚀 Run Full Analysis", use_container_width=True):
         asyncio.set_event_loop(loop)
 
     with st.spinner("Executing Automated Test Suite..."):
-        # Playwright Run
         ui_metrics = loop.run_until_complete(run_playwright_test(target_url, width, height))
-        # Requests Run
         links_df = check_broken_links(target_url)
         sec_results = run_security_check(target_url)
 
