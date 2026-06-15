@@ -192,7 +192,13 @@ if st.sidebar.button("🚀 Execute Comprehensive Analysis Pipelines", use_contai
     with tab1:
         st.subheader("Auto UI Verification Matrix")
         with st.spinner("Spawning headless execution workers..."):
-            ui_metrics = asyncio.run(run_playwright_test(target_url, width, height))
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+    ui_metrics = loop.run_until_complete(run_playwright_test(target_url, width, height))
         
         col1, col2 = st.columns([1, 2])
         with col1:
