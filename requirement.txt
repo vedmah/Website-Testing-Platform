@@ -1,18 +1,5 @@
-# Core Web UI Framework
-streamlit>=1.30.0
-
-# Asynchronous Headless Browser Automation (UI & Screenshots)
-playwright>=1.40.0
-
-# Traditional Browser Driver Automation (Cross-browser fallback)
-selenium>=4.15.0
-
-# HTML Parsing & Web Scraping (Broken Link Detection)
-beautifulsoup4>=4.12.0
-
-# HTTP Request Client (Security Checks & Link Validation)
-requests>=2.31.0
-
-# Data Manipulation & Metrics Matrix Layouts
-pandas>=2.1.0
-  
+streamlit
+playwright
+beautifulsoup4
+requests
+pandas
