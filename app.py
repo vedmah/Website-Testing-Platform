@@ -138,7 +138,7 @@ with trigger_col:
     st.write("<div style='height: 28px;'></div>", unsafe_allow_html=True) # Structural spacing block
     run_pipeline = st.button("🚀 Run Analysis Execution Loop", use_container_width=True)
 
-st.hr()
+st.divider()
 
 # -----------------------------------------------------------------------------
 # 4. REAL-TIME ORCHESTRATION PIPELINE LOGIC
