@@ -274,7 +274,9 @@ if run_pipeline:
 # -----------------------------------------------------------------------------
 if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_data is not None:
     data = st.session_state.payload_data
-    meta = data["metadata"]
+    
+    # Safe fallback handling for session state memory mismatches
+    meta = data.get("metadata", data.get("meta", {"title": "Unknown Target", "links": 0, "images": 0, "forms": 0, "server": "Cloud Server"}))
     
     # Telemetry Analytics Rows
     col_m1, col_m2, col_m3 = st.columns(3)
@@ -282,21 +284,21 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_
         st.markdown(f"""
             <div class='matrix-card'>
                 <h5>Gateway Payload Code</h5>
-                <h2 style='color:#00FFA3 !important; margin: 5px 0 0 0; font-size: 32px;'>{data['status']} OK</h2>
+                <h2 style='color:#00FFA3 !important; margin: 5px 0 0 0; font-size: 32px;'>{data.get('status', 200)} OK</h2>
             </div>
         """, unsafe_allow_html=True)
     with col_m2:
         st.markdown(f"""
             <div class='matrix-card'>
                 <h5>Core Network Latency</h5>
-                <h2 style='color:#00FFA3 !important; margin: 5px 0 0 0; font-size: 32px;'>{data['latency']} ms</h2>
+                <h2 style='color:#00FFA3 !important; margin: 5px 0 0 0; font-size: 32px;'>{data.get('latency', 0)} ms</h2>
             </div>
         """, unsafe_allow_html=True)
     with col_m3:
         st.markdown(f"""
             <div class='matrix-card'>
                 <h5>Host Runtime Web Server</h5>
-                <h2 style='color:#00FFA3 !important; margin: 5px 0 0 0; font-size: 20px; padding-top: 8px;'>{meta['server']}</h2>
+                <h2 style='color:#00FFA3 !important; margin: 5px 0 0 0; font-size: 20px; padding-top: 8px;'>{meta.get('server', 'Cloud Infrastructure')}</h2>
             </div>
         """, unsafe_allow_html=True)
 
@@ -307,8 +309,10 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_
     
     with display_col:
         st.markdown("<h3 style='color: #FFFFFF !important; font-size: 18px; font-weight: 600; margin-bottom: 12px;'>📋 Real-Time Machine-Generated QA Test Suite</h3>", unsafe_allow_html=True)
-        # Direct structural deployment rendering yields perfect high-visibility tables
-        st.dataframe(data['test_cases'], use_container_width=True, hide_index=True)
+        if 'test_cases' in data:
+            st.dataframe(data['test_cases'], use_container_width=True, hide_index=True)
+        else:
+            st.warning("🔄 Session data structure mismatch. Please click 'Run Analysis Execution Loop' again to update.")
 
     with canvas_col:
         st.markdown("<h3 style='color: #FFFFFF !important; font-size: 18px; font-weight: 600; margin-bottom: 12px;'>🖥️ Multi-Viewport Fluid Wireframe Canvas</h3>", unsafe_allow_html=True)
@@ -325,11 +329,11 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_
                     <span style="color: #8A99AD !important; font-size: 12px;">{device_mode.split()[0]} View Mode</span>
                 </div>
                 <p style="margin: 0 0 8px 0; color: #8A99AD !important;"><span style="color: #00FFA3 !important;">[Target Vector]:</span> {target_url}</p>
-                <p style="margin: 0 0 8px 0; color: #FFFFFF !important;"><span style="color: #00FFA3 !important;">[Meta Title]:</span> {meta['title']}</p>
+                <p style="margin: 0 0 8px 0; color: #FFFFFF !important;"><span style="color: #00FFA3 !important;">[Meta Title]:</span> {meta.get('title', 'N/A')}</p>
                 <hr style="border: 0.5px solid #1E2230; margin: 15px 0;">
-                <p style="margin: 0 0 6px 0; color: #FFFFFF !important;">⚡ <span style="color: #8A99AD !important;">Discovered Action Link Layers:</span> {meta['links']} structural paths</p>
-                <p style="margin: 0 0 6px 0; color: #FFFFFF !important;">🖼️ <span style="color: #8A99AD !important;">Discovered Image Nodes:</span> {meta['images']} visual paths</p>
-                <p style="margin: 0 0 6px 0; color: #FFFFFF !important;">📥 <span style="color: #8A99AD !important;">Captured Form Vectors:</span> {meta['forms']} submit blocks</p>
+                <p style="margin: 0 0 6px 0; color: #FFFFFF !important;">⚡ <span style="color: #8A99AD !important;">Discovered Action Link Layers:</span> {meta.get('links', 0)} structural paths</p>
+                <p style="margin: 0 0 6px 0; color: #FFFFFF !important;">🖼️ <span style="color: #8A99AD !important;">Discovered Image Nodes:</span> {meta.get('images', 0)} visual paths</p>
+                <p style="margin: 0 0 6px 0; color: #FFFFFF !important;">📥 <span style="color: #8A99AD !important;">Captured Form Vectors:</span> {meta.get('forms', 0)} submit blocks</p>
                 <hr style="border: 0.5px solid #1E2230; margin: 15px 0;">
                 <p style="color: #00FFA3 !important; font-size: 12px; margin: 0; text-align: center;">✓ Interface layout matrix matches configuration guidelines.</p>
             </div>
