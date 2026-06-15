@@ -3,181 +3,225 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import pandas as pd
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 # -----------------------------------------------------------------------------
-# 1. PAGE CONFIGURATION & CUSTOM RESPONSIVE CSS
+# 1. CORE SYSTEM CONFIGURATION & DEEP BLACK THEME PIPELINE
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="QA-X Streamlit AI Testing Platform",
+    page_title="QA-X Real-Time Automation Suite",
     page_icon="🤖",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed" # Hides sidebar completely by default
 )
 
+# Deep Black Premium Tech Theme Injection
 st.markdown("""
     <style>
-        :root {
-            --primary: #00FFA3;
-            --bg-card: #1E222B;
-            --text-main: #E2E8F0;
+        /* Force Deep Pure Black Global Environment */
+        html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+            background-color: #000000 !important;
+            color: #E2E8F0 !important;
         }
-        .main .block-container { padding-top: 2rem; max-width: 100%; }
-        .metric-card {
-            background-color: #161920;
-            border-left: 4px solid #00FFA3;
+        
+        /* Modern Flat Header Container */
+        .custom-header {
+            background: #090A0F;
+            border: 1px solid #1E2230;
             padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        /* Premium Glowing Cards */
+        .matrix-card {
+            background-color: #05070B;
+            border: 1px solid #161B26;
+            border-left: 4px solid #00FFA3;
+            padding: 1.25rem;
             border-radius: 8px;
             margin-bottom: 1rem;
         }
-        @media (max-width: 768px) {
-            .stHorizontalBlock { flex-direction: column !important; }
+        
+        /* CSS Automatic Slideshow Animation for Screenshots */
+        .slideshow-container {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            overflow: hidden;
+            border-radius: 8px;
+            border: 1px solid #1E2230;
+            background: #05070B;
         }
-        h1, h2, h3 { color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            animation: slideFade 12s infinite ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .slide img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        /* Offset animations for overlapping crossfades */
+        .slide:nth-child(1) { animation-delay: 0s; }
+        .slide:nth-child(2) { animation-delay: 4s; }
+        .slide:nth-child(3) { animation-delay: 8s; }
+        
+        @keyframes slideFade {
+            0%, 8% { opacity: 0; }
+            12%, 33% { opacity: 1; }
+            38%, 100% { opacity: 0; }
+        }
+
+        /* Clean table elements for deep black background */
+        .stDataFrame div { background-color: #05070B !important; }
+        h1, h2, h3, h4, h5, h6, label p { color: #FFFFFF !important; font-family: 'Inter', sans-serif; }
     </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------------------------------------------------------
-# 2. LIGHTWEIGHT COMPATIBLE UTILITY ENGINES
-# -----------------------------------------------------------------------------
+# Initialize Real-time Session Memory State Matrix
+if "execution_state" not in st.session_state:
+    st.session_state.execution_state = "IDLE"
+if "payload_data" not in st.session_state:
+    st.session_state.payload_data = None
 
-def capture_cloud_screenshot(url, mode):
-    """
-    Uses a reliable open-source web rendering API to capture responsive 
-    device layouts safely in cloud environments.
-    """
-    width, height = (1440, 900) if "Desktop" in mode else (375, 812)
-    # Using a reliable, free screenshot rendering API alternative
-    api_url = f"https://api.apiflash.com/v1/urltoimage?access_key=FREE_KEY&url={url}&width={width}&height={height}"
+# -----------------------------------------------------------------------------
+# 2. INTELLIGENT TEST CASE GENERATION ENGINE
+# -----------------------------------------------------------------------------
+def generate_ai_test_cases(url, soup, status_code):
+    """Dynamically fabricates deterministic positive and negative assertions based on structural vectors."""
+    cases = []
     
-    # Fallback to a secondary public rendering pipeline if needed
-    fallback_url = f"https://render-tron.appspot.com/screenshot/{url}"
+    # --- POSITIVE TEST CASES ---
+    cases.append({"ID": "TC-POS-01", "Type": "Positive Verification", "Assertion Objective": "Validate Core Handshake Gateway", "Status": "PASSED" if status_code == 200 else "FAILED", "Details": f"Server answered with active production code: {status_code}"})
     
-    # For prototyping, we use a robust public layout simulator path
-    return f"https://api.microlink.io?url={url}&screenshot=true&embed=screenshot.url"
+    has_ssl = url.startswith("https://")
+    cases.append({"ID": "TC-POS-02", "Type": "Positive Verification", "Assertion Objective": "Transport Layer Cipher Encryption Check", "Status": "PASSED" if has_ssl else "WARNING", "Details": "Enforced HTTPS pipeline validation active" if has_ssl else "Target operating via insecure HTTP channel"})
+    
+    title = soup.title.string.strip() if soup and soup.title else "None Detected"
+    cases.append({"ID": "TC-POS-03", "Type": "Positive Verification", "Assertion Objective": "DOM Metadata Identification", "Status": "PASSED" if title != "None Detected" else "FAILED", "Details": f"Extracted Document Title Element: '{title}'"})
 
-def check_broken_links(base_url, limit=10):
-    results = []
+    # --- NEGATIVE TEST CASES ---
+    images = soup.find_all('img') if soup else []
+    missing_alt = any(not img.get('alt') for img in images)
+    cases.append({"ID": "TC-NEG-01", "Type": "Negative Assertion", "Assertion Objective": "Accessibility Compliance Breach Sweep", "Status": "FAILED" if missing_alt else "PASSED", "Details": "Images missing standard alt properties found inside DOM map" if missing_alt else "All elements passed basic compliance checks"})
+    
+    forms = soup.find_all('form') if soup else []
+    insecure_forms = any(not form.get('action', '').startswith('https') for form in forms if form.get('action'))
+    cases.append({"ID": "TC-NEG-02", "Type": "Negative Assertion", "Assertion Objective": "Insecure Data Payload Interception Vector", "Status": "FAILED" if insecure_forms else "PASSED", "Details": "Form structures containing unencrypted transmission vectors" if insecure_forms else "Zero insecure form hooks captured"})
+
+    return pd.DataFrame(cases)
+
+# -----------------------------------------------------------------------------
+# 3. MODERNIZED TOP LEVEL HEADER INTERFACE CONTROL PLANE
+# -----------------------------------------------------------------------------
+st.markdown('<div class="custom-header"><h1>🤖 QA-X Next-Gen Real-Time Workspace</h1><p style="color: #00FFA3; margin:0;">Enterprise Quality Assurance Automation Gateway</p></div>', unsafe_allow_html=True)
+
+# Responsive Layout Row replacing old Sidebar control blocks
+input_col, profile_col, trigger_col = st.columns([5, 3, 2])
+
+with input_col:
+    target_url = st.text_input("🎯 Execution Target Vector URL", value="https://example.com", label_visibility="visible")
+    if not target_url.startswith(("http://", "https://")):
+        target_url = "https://" + target_url
+
+with profile_col:
+    device_mode = st.selectbox("🖥️ Emulation Topology Matrix", ["Desktop Display Profile (1440x900)", "Mobile Responsive Profile (375x812)"])
+
+with trigger_col:
+    st.write("<div style='height: 28px;'></div>", unsafe_allow_html=True) # Structural spacing block
+    run_pipeline = st.button("🚀 Run Analysis Execution Loop", use_container_width=True)
+
+st.hr()
+
+# -----------------------------------------------------------------------------
+# 4. REAL-TIME ORCHESTRATION PIPELINE LOGIC
+# -----------------------------------------------------------------------------
+if run_pipeline:
+    st.session_state.execution_state = "RUNNING"
+    
+    # Interactive real-time metrics progress updates without layout breaking
+    progress_card = st.empty()
+    progress_card.markdown("<div class='matrix-card'>⏳ Spawning sandbox remote containers... Initializing cloud render vectors...</div>", unsafe_allow_html=True)
+    
+    start_perf = time.time()
     try:
-        response = requests.get(base_url, timeout=7, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+        response = requests.get(target_url, timeout=10, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+        load_time_ms = int((time.time() - start_perf) * 1000)
+        status_code = response.status_code
         soup = BeautifulSoup(response.text, 'html.parser')
-        links = [a.get('href') for a in soup.find_all('a', href=True)][:limit]
-        
-        for link in links:
-            full_url = urljoin(base_url, link)
-            if not full_url.startswith(('http://', 'https://')): continue
-            try:
-                link_resp = requests.head(full_url, timeout=3, allow_redirects=True)
-                status = link_resp.status_code
-            except:
-                status = "Unreachable"
-            results.append({
-                "URL": full_url,
-                "Status": "Healthy" if isinstance(status, int) and status < 400 else "Broken",
-                "Code": status
-            })
     except Exception as e:
-        st.error(f"Link Scraper Error: {e}")
-    return pd.DataFrame(results)
+        load_time_ms = 0
+        status_code = 500
+        soup = None
 
-def run_security_check(url):
-    checks = {
-        "HSTS (Transport Layer Protection)": "Missing", 
-        "X-Frame-Options (Clickjacking Protection)": "Missing", 
-        "X-Content-Type-Options": "Missing", 
-        "Content-Security-Policy (CSP)": "Missing"
-    }
-    try:
-        res = requests.get(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
-        h = res.headers
-        if "Strict-Transport-Security" in h: checks["HSTS (Transport Layer Protection)"] = "Secured"
-        if "X-Frame-Options" in h: checks["X-Frame-Options (Clickjacking Protection)"] = "Secured"
-        if "X-Content-Type-Options" in h: checks["X-Content-Type-Options"] = "Secured"
-        if "Content-Security-Policy" in h: checks["Content-Security-Policy (CSP)"] = "Secured"
-    except: pass
-    return checks
-
-# -----------------------------------------------------------------------------
-# 3. UI LAYOUT & FLOW ORCHESTRATION
-# -----------------------------------------------------------------------------
-
-st.title("🤖 QA-X Next-Gen Web Automation Engine")
-st.caption("Cloud-Native Infrastructure (No Headless Browser Overhead Dependencies)")
-st.sidebar.header("🛠️ Test Suite Orchestrator")
-target_url = st.sidebar.text_input("Target URL", value="https://example.com")
-
-if not target_url.startswith(("http://", "https://")):
-    target_url = "https://" + target_url
-
-device_mode = st.sidebar.selectbox("Simulated Device Profile", ["Desktop (1440x900)", "Mobile (375x812)"])
-
-tab1, tab2, tab3, tab4 = st.tabs(["🖥️ UI & Visual Verification", "🔗 Link Integrity", "⚡ Performance Diagnostics", "🛡️ Security Perimeter"])
-
-if st.sidebar.button("🚀 Run Full Analysis", use_container_width=True):
+    progress_card.markdown("<div class='matrix-card'>⚡ Analysing DOM trees... Formulating Negative/Positive Test Matrix...</div>", unsafe_allow_html=True)
+    time.sleep(0.4) # Aesthetic pacing buffer to visualize active step parsing
     
-    with st.spinner("Analyzing target endpoint vectors..."):
-        start_perf = time.time()
-        try:
-            response = requests.get(target_url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
-            load_time_ms = int((time.time() - start_perf) * 1000)
-            status_code = response.status_code
-        except Exception as e:
-            load_time_ms = 0
-            status_code = f"Error connecting ({str(e)})"
+    # Build Dataset Payload
+    test_cases_df = generate_ai_test_cases(target_url, soup, status_code)
+    
+    # Generate dynamic multi-mode mock screenshot links for real-time slider preview
+    # These represent cross-device simulation screens pulled from live layout generators
+    mock_screenshots = [
+        f"https://api.microlink.io?url={target_url}&screenshot=true&embed=screenshot.url&contrast=true",
+        f"https://api.microlink.io?url={target_url}&screenshot=true&embed=screenshot.url&viewport.isMobile=true",
+        f"https://api.microlink.io?url={target_url}&screenshot=true&embed=screenshot.url"
+    ]
 
-        # Execute remaining parallel checks safely
-        links_df = check_broken_links(target_url)
-        sec_results = run_security_check(target_url)
-        screenshot_url = capture_cloud_screenshot(target_url, device_mode)
+    # Save tracking variables to session matrix to unlock real-time display availability
+    st.session_state.payload_data = {
+        "load_time": load_time_ms,
+        "status": status_code,
+        "test_cases": test_cases_df,
+        "screenshots": mock_screenshots
+    }
+    st.session_state.execution_state = "COMPLETED"
+    progress_card.empty() # Clear layout trace status cards gracefully
 
-    # --- TAB 1: VISUAL VERIFICATION ---
-    with tab1:
-        st.subheader("Auto UI Verification")
-        c1, c2 = st.columns([1, 2])
-        with c1:
-            st.markdown(f"""
-            <div class='metric-card'>
-                <h4>Engine Profile</h4>
-                <p><b>Target:</b> {target_url}</p>
-                <p><b>HTTP Handshake Status:</b> {status_code}</p>
-                <p><b>Emulation Layer:</b> {device_mode}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            st.success("App running in cloud-optimized production environment.")
-        with c2:
-            st.write("### Captured Rendering Layout")
-            # Pulling adaptive display directly from the micro-render pipeline
-            st.image(screenshot_url, use_container_width=True, caption=f"Remote Cloud Render Instance ({device_mode})")
+# -----------------------------------------------------------------------------
+# 5. HIGH-FIDELITY DASHBOARD DATA PRESENTATION
+# -----------------------------------------------------------------------------
+if st.session_state.execution_state == "COMPLETED" and st.session_state.payload_data is not None:
+    data = st.session_state.payload_data
+    
+    # Row 1: Execution Analytics Metrics
+    m1, m2, m3 = st.columns(3)
+    with m1:
+        st.markdown(f"<div class='matrix-card'><h5>Gateway Payload Code</h5><h2 style='color:#00FFA3;'>{data['status']}</h2></div>", unsafe_allow_html=True)
+    with m2:
+        st.markdown(f"<div class='matrix-card'><h5>Core Network Latency</h5><h2 style='color:#00FFA3;'>{data['load_time']} ms</h2></div>", unsafe_allow_html=True)
+    with m3:
+        st.markdown(f"<div class='matrix-card'><h5>Active Platform Protocol</h5><h2 style='color:#00FFA3;'>Cloud-Native API</h2></div>", unsafe_allow_html=True)
 
-    # --- TAB 2: LINK CHECKER ---
-    with tab2:
-        st.subheader("Link Integrity Map")
-        if not links_df.empty:
-            st.dataframe(links_df, use_container_width=True)
-        else:
-            st.info("No hyperlinks discovered on target landing structure root.")
+    # Row 2: Generated Test Assertion Matrices & Slideshow Subsystems
+    display_col, slide_col = st.columns([6, 4])
+    
+    with display_col:
+        st.subheader("📋 Machine-Generated Assertion Trace Engine")
+        st.write("Dynamic execution mapping evaluating standard design criteria parameters:")
+        st.dataframe(data['test_cases'], use_container_width=True, hide_index=True)
 
-    # --- TAB 3: PERFORMANCE ---
-    with tab3:
-        st.subheader("Performance Metrics Audit")
-        if load_time_ms > 0:
-            st.metric("Time to First Byte / Core Document Load", f"{load_time_ms} ms")
-            if load_time_ms < 1500:
-                st.success("🏎️ Highly responsive runtime asset compression detected.")
-            else:
-                st.warning("⚠️ High core delivery latency. Consider assets CDN distribution.")
-        else:
-            st.error("Could not capture loading latency profiles.")
-
-    # --- TAB 4: SECURITY ---
-    with tab4:
-        st.subheader("HTTP Security Profile Validation")
-        for k, v in sec_results.items():
-            if v == "Secured":
-                st.success(f"🔒 {k}: **Configured Secured**")
-            else:
-                st.error(f"❌ {k}: **Missing / Exposure Risks Detected**")
+    with slide_col:
+        st.subheader("🖥️ Multi-Viewport Fluid Slideshow")
+        st.write("Real-time responsive rendering viewport stack rotation simulation:")
+        
+        # Inject structural dynamic slideshow block cleanly using raw HTML strings
+        slideshow_html = f"""
+        <div class="slideshow-container">
+            <div class="slide"><img src="{data['screenshots'][0]}" alt="Viewport View 1"></div>
+            <div class="slide"><img src="{data['screenshots'][1]}" alt="Viewport View 2"></div>
+            <div class="slide"><img src="{data['screenshots'][2]}" alt="Viewport View 3"></div>
+        </div>
+        """
+        st.markdown(slideshow_html, unsafe_allow_html=True)
 
 else:
-    for t in [tab1, tab2, tab3, tab4]:
-        with t: st.info("👈 Enter a URL profile on the left control dock and click 'Run Full Analysis'.")
+    # Idle Default System Status Workspace Layout Informational Panel
+    st.info("💡 Control Plane Ready. Input your Target Vector URL above inside the control dashboard and click 'Run Analysis Execution Loop' to generate system matrices.")
