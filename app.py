@@ -6,6 +6,9 @@ import time
 import pandas as pd
 from urllib.parse import urlparse, urljoin
 import re
+import json
+import os
+from datetime import datetime
 
 # -----------------------------------------------------------------------------
 # 1. PREMIUM HIGH-CONTRAST DARK THEME CONFIGURATION
@@ -145,6 +148,35 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+HISTORY_FILE = "qa_execution_history.json"
+
+# -----------------------------------------------------------------------------
+# 2. AUTOMATED HISTORY DATA VAULT HANDLING
+# -----------------------------------------------------------------------------
+def load_historical_vault():
+    if not os.path.exists(HISTORY_FILE):
+        return []
+    try:
+        with open(HISTORY_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def append_to_historical_vault(target_url, final_score, links_count, images_count, pages_count, test_cases):
+    current_history = load_historical_vault()
+    new_record = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "target_url": target_url,
+        "score": final_score,
+        "total_pages": pages_count,
+        "total_links": links_count,
+        "total_images": images_count,
+        "cases": test_cases
+    }
+    current_history.insert(0, new_record) # Insert newest execution record on top
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(current_history, f, indent=4)
+
 # Initialize Session Memory Slots
 if "execution_state" not in st.session_state:
     st.session_state.execution_state = "IDLE"
@@ -158,7 +190,7 @@ if "summary_metrics" not in st.session_state:
     st.session_state.summary_metrics = {}
 
 # -----------------------------------------------------------------------------
-# 2. ENHANCED AUTOMATION TEST FACTORY ENGINE
+# 3. ENHANCED AUTOMATION TEST FACTORY ENGINE
 # -----------------------------------------------------------------------------
 def run_automated_test_factory(url, soup, path_index):
     suite = []
@@ -227,7 +259,7 @@ def run_automated_test_factory(url, soup, path_index):
     return suite
 
 # -----------------------------------------------------------------------------
-# 3. HIGH-SPEED CONCURRENT ASYNC CRAWLER PIPELINE
+# 4. HIGH-SPEED CONCURRENT ASYNC CRAWLER PIPELINE
 # -----------------------------------------------------------------------------
 async def fetch_and_parse_node(client, url, path_index, target_domain):
     custom_agent = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) QA-X Core/8.0"}
@@ -246,7 +278,6 @@ async def fetch_and_parse_node(client, url, path_index, target_domain):
         soup = BeautifulSoup("<html><body></body></html>", 'html.parser')
         
     suite_cases = run_automated_test_factory(url, soup, path_index)
-    
     link_count = len(soup.find_all('a')) if soup else 0
     img_count = len(soup.find_all('img')) if soup else 0
     
@@ -260,19 +291,16 @@ async def fetch_and_parse_node(client, url, path_index, target_domain):
 
 async def pipeline_orchestrator(start_url):
     target_domain = urlparse(start_url).netloc
-    
     visited_urls = set()
     urls_to_crawl = [start_url]
     
     master_suites = []
     screenshot_stack = []
-    
     total_links = 0
     total_images = 0
     path_index = 1
     
     status_box = st.empty()
-    
     limits = httpx.Limits(max_keepalive_connections=20, max_connections=50)
     async with httpx.AsyncClient(limits=limits, verify=False) as client:
         while urls_to_crawl and path_index <= 40:
@@ -315,6 +343,7 @@ async def pipeline_orchestrator(start_url):
     passed = sum(1 for t in master_suites if t["Status"] == "PASSED")
     score = int((passed / len(master_suites)) * 100) if master_suites else 100
     
+    # Store globally to State Memory
     st.session_state.summary_metrics = {
         "score": score,
         "links": total_links,
@@ -324,15 +353,18 @@ async def pipeline_orchestrator(start_url):
     st.session_state.master_test_suite = master_suites
     st.session_state.all_screenshot_pairs = screenshot_stack
     st.session_state.execution_state = "COMPLETED"
+    
+    # Core Automatic Background Saving Triggers
+    append_to_historical_vault(start_url, score, total_links, total_images, len(visited_urls), master_suites)
 
 # -----------------------------------------------------------------------------
-# 4. WORKSPACE OPERATION PANEL
+# 5. WORKSPACE OPERATION PANEL
 # -----------------------------------------------------------------------------
 st.markdown("""
     <div class="custom-header">
         <h1 style="margin: 0; font-size: 26px; font-weight: 700; color: #FFFFFF !important;">🤖 QA-X Pure Autonomous Workspace</h1>
         <p style="color: #00FFA3 !important; margin: 4px 0 0 0; font-size: 13px; font-weight: 500;">
-            1-Click Total Domain Scan • High-Speed Asynchronous Matrix
+            High-Speed Asynchronous Scanning Engine with Automated History Tracking Vault
         </p>
     </div>
 """, unsafe_allow_html=True)
@@ -351,7 +383,7 @@ with button_col:
 st.divider()
 
 # -----------------------------------------------------------------------------
-# 5. ORCHESTRATED INVOCATION
+# 6. ORCHESTRATED INVOCATION
 # -----------------------------------------------------------------------------
 if start_analysis:
     st.session_state.execution_state = "RUNNING"
@@ -359,13 +391,12 @@ if start_analysis:
     asyncio.run(pipeline_orchestrator(target_url))
 
 # -----------------------------------------------------------------------------
-# 6. CENTRALIZED UNIFIED PRESENTATION GRID MATRIX (STACKED TO PREVENT OVERLAP)
+# 7. CENTRALIZED STACKED RUNTIME VIEW (PREVENTS OVERLAP)
 # -----------------------------------------------------------------------------
 if st.session_state.execution_state == "COMPLETED" and st.session_state.master_test_suite:
     summary_data = st.session_state.summary_metrics
     screenshot_stack = st.session_state.all_screenshot_pairs
     
-    # Telemetry row (Full Width)
     metric_c1, metric_c2, metric_c3 = st.columns(3)
     with metric_c1:
         st.markdown(f"<div class='matrix-card'><h5>Total Domain Footprint</h5><h2 style='color:#00FFA3 !important; font-size:22px;'>{summary_data.get('scanned_count')} Pages Swept</h2></div>", unsafe_allow_html=True)
@@ -376,8 +407,8 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.master_t
 
     st.write("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
-    # SECTION 1: Master Test Table (Spans full width so text doesn't squeeze or wrap)
-    st.markdown("<h3 style='font-size:16px; font-weight:600; margin-bottom:12px;'>📋 Aggregated Site-Wide Automated Test Case Matrix</h3>", unsafe_allow_html=True)
+    # Master Table Screen Section View
+    st.markdown("<h3 style='font-size:16px; font-weight:600; margin-bottom:12px;'>📋 Aggregated Site-Wide Automated Test Case Matrix (Saved Automatically)</h3>", unsafe_allow_html=True)
     
     html_table = '<table class="qa-matrix-table"><thead><tr>'
     html_table += '<th>Test ID</th><th>Target Path</th><th>Component</th><th>Objective Description</th><th>Status</th><th>Log Diagnostics</th>'
@@ -401,7 +432,7 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.master_t
 
     st.write("<div style='height: 30px;'></div>", unsafe_allow_html=True)
 
-    # SECTION 2: Carousel Section (Placed underneath the table with an isolated inner layout)
+    # Slideshow Visual Carousel Section Block Viewport
     st.markdown("<h3 style='font-size:16px; font-weight:600; margin-bottom:5px;'>🖥️ Automated Fluid Visual Slideshow Carousel</h3>", unsafe_allow_html=True)
     
     current_idx = st.session_state.get("slideshow_index", 0)
@@ -425,9 +456,7 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.master_t
         </div>
     """, unsafe_allow_html=True)
     
-    # Render viewports safely in dedicated columns inside the carousel section
     img_left_col, img_right_col = st.columns([6, 4])
-    
     with img_left_col:
         st.markdown("<p style='font-size:12px; color:#8A99AD; margin-bottom:5px;'>💻 Desktop Device Viewport (1280x800)</p>", unsafe_allow_html=True)
         st.image(active_target_node['desktop'], use_container_width=True)
@@ -435,7 +464,6 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.master_t
         st.markdown("<p style='font-size:12px; color:#8A99AD; margin-bottom:5px;'>📱 Mobile Device Viewport (480x800)</p>", unsafe_allow_html=True)
         st.image(active_target_node['mobile'], use_container_width=True)
         
-    # Navigation controls
     slide_left_col, slide_right_col = st.columns(2)
     with slide_left_col:
         if st.button("⬅️ Previous Scanned Page", use_container_width=True):
@@ -445,23 +473,59 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.master_t
         if st.button("Next Scanned Page ➡️", use_container_width=True):
             st.session_state.slideshow_index = (current_idx + 1) % len(screenshot_stack)
             st.rerun()
-            
-    st.markdown(f"""
-        <div class="blueprint-footer">
-            <div style="font-size: 11px; color: #8A99AD; line-height: 1.6; font-family: 'Courier New', monospace;">
-                • Responsiveness Check ..... [ <span style="color:#00FFA3;">COMPLETED</span> ]<br>
-                • Typography & Fonts Verify . [ <span style="color:#00FFA3;">COMPLETED</span> ]<br>
-                • Asset Image Layout Scanner . [ <span style="color:#00FFA3;">COMPLETED</span> ]<br>
-                • Text Letter Case Assertion . [ <span style="color:#00FFA3;">COMPLETED</span> ]
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
 
+st.write("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+st.divider()
+
+# -----------------------------------------------------------------------------
+# 8. LIVE HISTORICAL ARCHIVE EXPANSION AUDIT CONTROL FOR EMPLOYEES
+# -----------------------------------------------------------------------------
+st.markdown("<h2 style='font-size:19px; font-weight:700; color:#FFFFFF;'>🗄️ Automated Testing Run Log History Vault</h2>", unsafe_allow_html=True)
+st.markdown("<p style='font-size:13px; color:#8A99AD; margin-top:-10px;'>Tracks past executions completely without manual intervention</p>", unsafe_allow_html=True)
+
+historical_runs = load_historical_vault()
+
+if not historical_runs:
+    st.markdown("<p style='font-size:13px; color:#FFBD2E; font-style:italic;'>No historical automation execution traces located within the vault archive.</p>", unsafe_allow_html=True)
 else:
-    st.markdown("""
-        <div class="stAlert">
-            <p style="margin: 0; color: #8A99AD !important; font-size: 13px;">
-                💡 <b>Workspace Primed</b>: Click <b>'Trigger Entire Site Automation'</b> to parse everything. The stacked data layout handles any resolution safely without overlapping elements.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Build clean history table list elements
+    summary_history_rows = []
+    for idx, run in enumerate(historical_runs):
+        summary_history_rows.append({
+            "Execution Date/Time": run["timestamp"],
+            "Target Root Vector Domain": run["target_url"],
+            "Scanned Footprint": f"{run['total_pages']} Pages Checked",
+            "Discovered Metadata": f"{run['total_images']} Images / {run['total_links']} Links",
+            "Quality Pass Score": f"{run['score']}% Grade"
+        })
+    
+    history_df = pd.DataFrame(summary_history_rows)
+    st.dataframe(history_df, use_container_width=True, hide_index=True)
+    
+    # Detailed individual historical execution case drill down inspect drawer
+    st.write("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:13px; font-weight:600; color:#E2E8F0;'>🔍 Drill-Down Into Historical Logs Archive File</p>", unsafe_allow_html=True)
+    
+    run_options = [f"[{run['timestamp']}] - {run['target_url']} ({run['score']}% Score)" for run in historical_runs]
+    selected_run_string = st.selectbox("Select a historical record file target node to inspect/export", run_options)
+    
+    selected_index = run_options.index(selected_run_string)
+    target_archived_run = historical_runs[selected_index]
+    
+    # Build clean raw DataFrame structure for data visibility and simple exports
+    cases_df = pd.DataFrame(target_archived_run["cases"])
+    
+    # Row utilities layout for exports
+    csv_col, state_col = st.columns([4, 6])
+    with csv_col:
+        csv_buffer = cases_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Export Selected Test Cases Array to CSV File Spreadsheet",
+            data=csv_buffer,
+            file_name=f"qa_test_report_{target_archived_run['timestamp'].replace(' ', '_').replace(':', '-')}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+        
+    with st.expander("👁️ View Extracted Case Rows Inline"):
+        st.dataframe(cases_df, use_container_width=True, hide_index=True)
