@@ -155,9 +155,6 @@ if "slideshow_index" not in st.session_state:
 if "summary_metrics" not in st.session_state:
     st.session_state.summary_metrics = {}
 
-# Fallbacks
-DEFAULT_DESKTOP = "https://image.thum.io/get/width/1280/crop/800/https://www.tutorialspoint.com"
-
 # -----------------------------------------------------------------------------
 # 2. ENHANCED AUTOMATION TEST FACTORY ENGINE
 # -----------------------------------------------------------------------------
@@ -168,7 +165,7 @@ def run_automated_test_factory(url, soup, status_code, html_content, path_index)
     # 1. Responsiveness Check
     has_viewport = bool(soup and soup.find('meta', attrs={'name': 'viewport'}))
     suite.append({
-        "ID": f"RSP-{path_index:02d}",
+        "ID": f"RSP-{path_index:03d}",
         "Page Path": page_path,
         "Component": "Responsiveness Matrix",
         "Objective": "Verify active scaling viewport parameters exist for fluid layout rendering.",
@@ -184,7 +181,7 @@ def run_automated_test_factory(url, soup, status_code, html_content, path_index)
         has_custom_fonts = has_font_link or has_font_style
         
     suite.append({
-        "ID": f"FNT-{path_index:02d}",
+        "ID": f"FNT-{path_index:03d}",
         "Page Path": page_path,
         "Component": "Typography Engine",
         "Objective": "Check font loading paths, asset styling, and uniform text fallbacks.",
@@ -204,7 +201,7 @@ def run_automated_test_factory(url, soup, status_code, html_content, path_index)
         img_status = "WARNING"
         
     suite.append({
-        "ID": f"IMG-{path_index:02d}",
+        "ID": f"IMG-{path_index:03d}",
         "Page Path": page_path,
         "Component": "Graphic Assets",
         "Objective": "Scan media assets for absolute targets, missing anchors, and optimization issues.",
@@ -214,11 +211,10 @@ def run_automated_test_factory(url, soup, status_code, html_content, path_index)
     
     # 4. Text Character/Letters Inspection
     page_text = soup.get_text() if soup else ""
-    # Look for common typo issues or erratic caps patterns (e.g. "tHe", "wEbsItE")
     casing_anomalies = len(re.findall(r'\b[a-z]+[A-Z]+[a-z]*\b', page_text))
     
     suite.append({
-        "ID": f"LTR-{path_index:02d}",
+        "ID": f"LTR-{path_index:03d}",
         "Page Path": page_path,
         "Component": "Letter Syntax Core",
         "Objective": "Inspect textual layout fields for font casing anomalies or broken layouts.",
@@ -229,9 +225,9 @@ def run_automated_test_factory(url, soup, status_code, html_content, path_index)
     return suite
 
 # -----------------------------------------------------------------------------
-# 3. FULLY AUTONOMOUS WEB CRAWLER PIPELINE
+# 3. FULLY UNLIMITED DOMAIN CRAWLER PIPELINE
 # -----------------------------------------------------------------------------
-def run_completely_automated_suite(start_url, max_pages=6):
+def run_completely_automated_suite(start_url):
     target_domain = urlparse(start_url).netloc
     urls_to_crawl = [start_url]
     visited_urls = set()
@@ -242,22 +238,26 @@ def run_completely_automated_suite(start_url, max_pages=6):
     total_links_tracked = 0
     total_images_tracked = 0
     
-    progress_bar = st.progress(0.0)
+    # Text-based update field instead of a percentage progress bar since total pages are dynamic
     status_text = st.empty()
     
-    custom_agent = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) QA-X Core/6.0"}
+    custom_agent = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) QA-X Core/7.0"}
     
     path_index = 1
-    while urls_to_crawl and path_index <= max_pages:
+    while urls_to_crawl:
         current_url = urls_to_crawl.pop(0)
         if current_url in visited_urls:
             continue
             
         visited_urls.add(current_url)
         
-        # Display progress status
-        progress_bar.progress(float(path_index / max_pages))
-        status_text.markdown(f"<span style='color: #00FFA3;'>🤖 Automating Engine Scopes [{path_index}/{max_pages}]:</span> scanning `{current_url}`", unsafe_allow_html=True)
+        # Display infinite real-time discovery count stats
+        status_text.markdown(f"""
+            <div class='matrix-card' style='border-left: 4px solid #00FFA3;'>
+                <span style='color: #00FFA3; font-weight: 600;'>🤖 Automated Scanning Queue: Running Page #{path_index}</span><br>
+                <span style='color: #8A99AD; font-size: 12px;'>Discovered Pool Size: {len(urls_to_crawl) + len(visited_urls)} | Currently inspecting:</span> <code style='color:#FFFFFF;'>{current_url}</code>
+            </div>
+        """, unsafe_allow_html=True)
         
         try:
             web_response = requests.get(current_url, timeout=6, headers=custom_agent)
@@ -265,28 +265,31 @@ def run_completely_automated_suite(start_url, max_pages=6):
             document_soup = BeautifulSoup(web_response.text, 'html.parser')
             html_raw = web_response.text
             
-            # Extract additional adjacent path nodes
+            # Identify and map adjacent internal pages
             for anchor in document_soup.find_all('a', href=True):
                 absolute_link = urljoin(current_url, anchor['href'])
+                # Clear URL query components and fragments to keep discovery uniform
                 absolute_link = absolute_link.split('#')[0].split('?')[0]
                 
+                # Check that link matches the domain and isn't a download asset file
                 if urlparse(absolute_link).netloc == target_domain and absolute_link not in visited_urls:
-                    if absolute_link not in urls_to_crawl:
-                        urls_to_crawl.append(absolute_link)
+                    if not absolute_link.lower().endswith(('.pdf', '.jpg', '.jpeg', '.png', '.gif', '.zip', '.tar', '.gz')):
+                        if absolute_link not in urls_to_crawl:
+                            urls_to_crawl.append(absolute_link)
         except Exception:
             http_code = 200
             document_soup = BeautifulSoup("<html><head><title>Offline Container</title></head><body></body></html>", 'html.parser')
             html_raw = ""
 
-        # Update absolute calculation totals
-        total_links_tracked += len(document_soup.find_all('a')) if document_soup else 12
-        total_images_tracked += len(document_soup.find_all('img')) if document_soup else 4
+        # Update running calculation counters
+        total_links_tracked += len(document_soup.find_all('a')) if document_soup else 0
+        total_images_tracked += len(document_soup.find_all('img')) if document_soup else 0
         
-        # Call verification suite engine
+        # Build test cases for this specific page structure
         page_checks = run_automated_test_factory(current_url, document_soup, http_code, html_raw, path_index)
         compiled_suite.extend(page_checks)
         
-        # Append target screenshots to sliding stack list arrays
+        # Capture automated layouts
         screenshot_sequence.append({
             "url": current_url,
             "desktop": f"https://image.thum.io/get/width/1280/crop/800/maxAge/1/{current_url}",
@@ -294,12 +297,10 @@ def run_completely_automated_suite(start_url, max_pages=6):
         })
         
         path_index += 1
-        time.sleep(0.1)
+        time.sleep(0.05)
         
-    progress_bar.empty()
     status_text.empty()
     
-    # Analyze absolute suite values to compile score index
     passed_runs = sum(1 for t in compiled_suite if t["Status"] == "PASSED")
     total_runs = len(compiled_suite) if len(compiled_suite) > 0 else 1
     grade_metric = int((passed_runs / total_runs) * 100)
@@ -322,20 +323,17 @@ st.markdown("""
     <div class="custom-header">
         <h1 style="margin: 0; font-size: 26px; font-weight: 700; color: #FFFFFF !important;">🤖 QA-X Pure Autonomous Workspace</h1>
         <p style="color: #00FFA3 !important; margin: 4px 0 0 0; font-size: 13px; font-weight: 500;">
-            1-Click Automated Core Testing Suite • No Manual Actions Required
+            1-Click Total Domain Scan • Scans Every Internal Page Automatically
         </p>
     </div>
 """, unsafe_allow_html=True)
 
-url_col, depth_col, button_col = st.columns([5, 3, 2])
+url_col, button_col = st.columns([7, 3])
 
 with url_col:
     target_url = st.text_input("🎯 Destination Target Vector URL", value="https://www.tutorialspoint.com", key="target_url_input")
     if not target_url.startswith(("http://", "https://")):
         target_url = "https://" + target_url
-
-with depth_col:
-    max_pages_limit = st.slider("📄 Maximum Autonomous Crawl Depth Limit", min_value=3, max_value=150, value=6)
 
 with button_col:
     st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
@@ -349,7 +347,7 @@ st.divider()
 if start_analysis:
     st.session_state.execution_state = "RUNNING"
     st.session_state.slideshow_index = 0  
-    run_completely_automated_suite(target_url, max_pages=max_pages_limit)
+    run_completely_automated_suite(target_url)
 
 # -----------------------------------------------------------------------------
 # 6. CENTRALIZED UNIFIED PRESENTATION GRID MATRIX
@@ -361,7 +359,7 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.master_t
     # Telemetry Monitoring Status Cards Row
     metric_c1, metric_c2, metric_c3 = st.columns(3)
     with metric_c1:
-        st.markdown(f"<div class='matrix-card'><h5>Autopilot Scan Footprint</h5><h2 style='color:#00FFA3 !important; font-size:22px;'>{summary_data.get('scanned_count')} Directories Swept</h2></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='matrix-card'><h5>Total Domain Footprint</h5><h2 style='color:#00FFA3 !important; font-size:22px;'>{summary_data.get('scanned_count')} Pages Swept</h2></div>", unsafe_allow_html=True)
     with metric_c2:
         st.markdown(f"<div class='matrix-card'><h5>Analyzed Media & Paths</h5><h2 style='color:#00FFA3 !important; font-size:22px;'>{summary_data.get('images')} Imgs / {summary_data.get('links')} Links</h2></div>", unsafe_allow_html=True)
     with metric_c3:
@@ -375,7 +373,6 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.master_t
     with left_table_col:
         st.markdown("<h3 style='font-size:15px; font-weight:600; margin-bottom:12px;'>📋 Aggregated Site-Wide Automated Test Case Matrix</h3>", unsafe_allow_html=True)
         
-        # Construct completely scalable HTML table rows
         html_table = '<table class="qa-matrix-table"><thead><tr>'
         html_table += '<th>Test ID</th><th>Target Path</th><th>Component</th><th>Objective Description</th><th>Status</th><th>Log Diagnostics</th>'
         html_table += '</tr></thead><tbody>'
@@ -399,10 +396,8 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.master_t
     with right_visual_col:
         st.markdown("<h3 style='font-size:15px; font-weight:600; margin-bottom:12px;'>🖥️ Automated Fluid Visual Slideshow Carousel</h3>", unsafe_allow_html=True)
         
-        # Automatically pull active node configuration references based on sliding matrix indices
         current_idx = st.session_state.get("slideshow_index", 0)
         
-        # Loop safety guard check framework
         if current_idx >= len(screenshot_stack):
             current_idx = 0
             st.session_state.slideshow_index = 0
@@ -423,14 +418,12 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.master_t
             </div>
         """, unsafe_allow_html=True)
         
-        # Display side-by-side automated viewport test responses
         view_tab_desktop, view_tab_mobile = st.tabs(["💻 Desktop Device Viewport", "📱 Mobile Device Viewport"])
         with view_tab_desktop:
             st.image(active_target_node['desktop'], use_container_width=True)
         with view_tab_mobile:
             st.image(active_target_node['mobile'], use_container_width=True)
             
-        # Slideshow step tracking buttons
         slide_left_col, slide_right_col = st.columns(2)
         with slide_left_col:
             if st.button("⬅️ Previous Scanned Page", use_container_width=True):
@@ -456,7 +449,7 @@ else:
     st.markdown("""
         <div class="stAlert">
             <p style="margin: 0; color: #8A99AD !important; font-size: 13px;">
-                💡 <b>Autopilot Mode Primed</b>: Enter your base target URL root vector above and press <b>'Trigger Entire Site Automation'</b>. The system will cleanly sweep the site landscape map, running responsive, lettering, font and image matrix assertions on a page-by-page sequence dynamically.
+                💡 <b>Autopilot Full-Sweep Enabled</b>: Enter your base target URL root vector above and press <b>'Trigger Entire Site Automation'</b>. The system will systematically scan every connected page on the website and build a full master matrix dashboard of test cases without stopping.
             </p>
         </div>
     """, unsafe_allow_html=True)
