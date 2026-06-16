@@ -335,7 +335,7 @@ with url_col:
         target_url = "https://" + target_url
 
 with depth_col:
-    max_pages_limit = st.slider("📄 Maximum Autonomous Crawl Depth Limit", min_value=3, max_value=15, value=6)
+    max_pages_limit = st.slider("📄 Maximum Autonomous Crawl Depth Limit", min_value=3, max_value=150, value=6)
 
 with button_col:
     st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
