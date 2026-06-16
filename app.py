@@ -104,6 +104,7 @@ st.markdown("""
             border: 1px solid #1E2230 !important;
             border-radius: 12px 12px 0 0;
             padding: 20px;
+            margin-top: 10px;
         }
         
         .blueprint-footer {
@@ -236,7 +237,6 @@ async def fetch_and_parse_node(client, url, path_index, target_domain):
         response = await client.get(url, headers=custom_agent, timeout=5.0, follow_redirects=True)
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Fast extraction of discovered sub-links
         for anchor in soup.find_all('a', href=True):
             absolute_link = urljoin(url, anchor['href']).split('#')[0].split('?')[0]
             if urlparse(absolute_link).netloc == target_domain:
@@ -245,10 +245,8 @@ async def fetch_and_parse_node(client, url, path_index, target_domain):
     except Exception:
         soup = BeautifulSoup("<html><body></body></html>", 'html.parser')
         
-    # Generate verification suites
     suite_cases = run_automated_test_factory(url, soup, path_index)
     
-    # Aggregate component counts
     link_count = len(soup.find_all('a')) if soup else 0
     img_count = len(soup.find_all('img')) if soup else 0
     
@@ -275,11 +273,9 @@ async def pipeline_orchestrator(start_url):
     
     status_box = st.empty()
     
-    # Using HTTP/2 concurrent socket pool connection management architecture
     limits = httpx.Limits(max_keepalive_connections=20, max_connections=50)
     async with httpx.AsyncClient(limits=limits, verify=False) as client:
-        while urls_to_crawl and path_index <= 40: # High safety cutoff ceiling threshold
-            # Pull a concurrent batch tier layer (up to 10 nodes processed simultaneously)
+        while urls_to_crawl and path_index <= 40:
             batch = []
             while urls_to_crawl and len(batch) < 10:
                 nxt = urls_to_crawl.pop(0)
@@ -297,7 +293,6 @@ async def pipeline_orchestrator(start_url):
                 </div>
             """, unsafe_allow_html=True)
             
-            # Fire all async threads concurrently
             tasks = []
             for url in batch:
                 tasks.append(fetch_and_parse_node(client, url, path_index, target_domain))
@@ -305,14 +300,12 @@ async def pipeline_orchestrator(start_url):
                 
             results = await asyncio.gather(*tasks)
             
-            # Unpack payload items instantly
             for suite_cases, screenshot_node, discovered_links, link_count, img_count in results:
                 master_suites.extend(suite_cases)
                 screenshot_stack.append(screenshot_node)
                 total_links += link_count
                 total_images += img_count
                 
-                # Append untracked internal connections back into the loop
                 for link in discovered_links:
                     if link not in visited_urls and link not in urls_to_crawl:
                         urls_to_crawl.append(link)
@@ -363,16 +356,16 @@ st.divider()
 if start_analysis:
     st.session_state.execution_state = "RUNNING"
     st.session_state.slideshow_index = 0  
-    # Execute the asynchronous event loop setup block context
     asyncio.run(pipeline_orchestrator(target_url))
 
 # -----------------------------------------------------------------------------
-# 6. CENTRALIZED UNIFIED PRESENTATION GRID MATRIX
+# 6. CENTRALIZED UNIFIED PRESENTATION GRID MATRIX (STACKED TO PREVENT OVERLAP)
 # -----------------------------------------------------------------------------
 if st.session_state.execution_state == "COMPLETED" and st.session_state.master_test_suite:
     summary_data = st.session_state.summary_metrics
     screenshot_stack = st.session_state.all_screenshot_pairs
     
+    # Telemetry row (Full Width)
     metric_c1, metric_c2, metric_c3 = st.columns(3)
     with metric_c1:
         st.markdown(f"<div class='matrix-card'><h5>Total Domain Footprint</h5><h2 style='color:#00FFA3 !important; font-size:22px;'>{summary_data.get('scanned_count')} Pages Swept</h2></div>", unsafe_allow_html=True)
@@ -381,89 +374,94 @@ if st.session_state.execution_state == "COMPLETED" and st.session_state.master_t
     with metric_c3:
         st.markdown(f"<div class='matrix-card'><h5>Comprehensive Quality Grade</h5><h2 style='color:#00FFA3 !important; font-size:22px;'>{summary_data.get('score')}% Pass Metric</h2></div>", unsafe_allow_html=True)
 
-    st.write("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+    st.write("<div style='height: 15px;'></div>", unsafe_allow_html=True)
 
-    left_table_col, right_visual_col = st.columns([6, 4])
+    # SECTION 1: Master Test Table (Spans full width so text doesn't squeeze or wrap)
+    st.markdown("<h3 style='font-size:16px; font-weight:600; margin-bottom:12px;'>📋 Aggregated Site-Wide Automated Test Case Matrix</h3>", unsafe_allow_html=True)
     
-    with left_table_col:
-        st.markdown("<h3 style='font-size:15px; font-weight:600; margin-bottom:12px;'>📋 Aggregated Site-Wide Automated Test Case Matrix</h3>", unsafe_allow_html=True)
+    html_table = '<table class="qa-matrix-table"><thead><tr>'
+    html_table += '<th>Test ID</th><th>Target Path</th><th>Component</th><th>Objective Description</th><th>Status</th><th>Log Diagnostics</th>'
+    html_table += '</tr></thead><tbody>'
+    
+    for item in st.session_state.master_test_suite:
+        status_val = str(item.get('Status', 'PASSED')).upper()
+        status_class = "badge-passed" if status_val == "PASSED" else ("badge-warning" if status_val == "WARNING" else "badge-failed")
         
-        html_table = '<table class="qa-matrix-table"><thead><tr>'
-        html_table += '<th>Test ID</th><th>Target Path</th><th>Component</th><th>Objective Description</th><th>Status</th><th>Log Diagnostics</th>'
-        html_table += '</tr></thead><tbody>'
+        html_table += f"<tr>"
+        html_table += f"<td style='font-weight:600; color:#8A99AD !important;'>{item.get('ID')}</td>"
+        html_table += f"<td style='font-family:monospace; font-size:12px; color:#00FFA3;'>{item.get('Page Path')}</td>"
+        html_table += f"<td style='font-weight:500;'>{item.get('Component')}</td>"
+        html_table += f"<td style='color:#E2E8F0 !important;'>{item.get('Objective')}</td>"
+        html_table += f"<td><span class='badge {status_class}'>{status_val}</span></td>"
+        html_table += f"<td style='color:#8A99AD !important; font-size:12px;'>{item.get('Diagnostics Log')}</td>"
+        html_table += f"</tr>"
         
-        for item in st.session_state.master_test_suite:
-            status_val = str(item.get('Status', 'PASSED')).upper()
-            status_class = "badge-passed" if status_val == "PASSED" else ("badge-warning" if status_val == "WARNING" else "badge-failed")
-            
-            html_table += f"<tr>"
-            html_table += f"<td style='font-weight:600; color:#8A99AD !important;'>{item.get('ID')}</td>"
-            html_table += f"<td style='font-family:monospace; font-size:12px; color:#00FFA3;'>{item.get('Page Path')}</td>"
-            html_table += f"<td style='font-weight:500;'>{item.get('Component')}</td>"
-            html_table += f"<td style='color:#E2E8F0 !important;'>{item.get('Objective')}</td>"
-            html_table += f"<td><span class='badge {status_class}'>{status_val}</span></td>"
-            html_table += f"<td style='color:#8A99AD !important; font-size:12px;'>{item.get('Diagnostics Log')}</td>"
-            html_table += f"</tr>"
-            
-        html_table += '</tbody></table>'
-        st.markdown(html_table, unsafe_allow_html=True)
+    html_table += '</tbody></table>'
+    st.markdown(html_table, unsafe_allow_html=True)
 
-    with right_visual_col:
-        st.markdown("<h3 style='font-size:15px; font-weight:600; margin-bottom:12px;'>🖥️ Automated Fluid Visual Slideshow Carousel</h3>", unsafe_allow_html=True)
+    st.write("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+
+    # SECTION 2: Carousel Section (Placed underneath the table with an isolated inner layout)
+    st.markdown("<h3 style='font-size:16px; font-weight:600; margin-bottom:5px;'>🖥️ Automated Fluid Visual Slideshow Carousel</h3>", unsafe_allow_html=True)
+    
+    current_idx = st.session_state.get("slideshow_index", 0)
+    if current_idx >= len(screenshot_stack):
+        current_idx = 0
+        st.session_state.slideshow_index = 0
         
-        current_idx = st.session_state.get("slideshow_index", 0)
-        if current_idx >= len(screenshot_stack):
-            current_idx = 0
-            st.session_state.slideshow_index = 0
-            
-        active_target_node = screenshot_stack[current_idx]
-        
-        st.markdown(f"""
-            <div class="mockup-canvas">
-                <div class="canvas-top-bar">
-                    <div>
-                        <span class="browser-dot"></span>
-                        <span class="browser-dot yellow"></span>
-                        <span class="browser-dot green"></span>
-                    </div>
-                    <span style="color: #00FFA3 !important; font-size: 11px; font-weight: 600;">⚡ Scan Step [{current_idx + 1} / {len(screenshot_stack)}]</span>
+    active_target_node = screenshot_stack[current_idx]
+    
+    st.markdown(f"""
+        <div class="mockup-canvas">
+            <div class="canvas-top-bar">
+                <div>
+                    <span class="browser-dot"></span>
+                    <span class="browser-dot yellow"></span>
+                    <span class="browser-dot green"></span>
                 </div>
-                <p style="margin: 0 0 4px 0; font-size:12px; color:#8A99AD !important; word-break: break-all;"><span style="color:#00FFA3 !important; font-weight: 600;">[Automated URL Vector]:</span> {active_target_node['url']}</p>
+                <span style="color: #00FFA3 !important; font-size: 11px; font-weight: 600;">⚡ Scan Step [{current_idx + 1} / {len(screenshot_stack)}]</span>
             </div>
-        """, unsafe_allow_html=True)
+            <p style="margin: 0 0 4px 0; font-size:12px; color:#8A99AD !important; word-break: break-all;"><span style="color:#00FFA3 !important; font-weight: 600;">[Automated URL Vector]:</span> {active_target_node['url']}</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Render viewports safely in dedicated columns inside the carousel section
+    img_left_col, img_right_col = st.columns([6, 4])
+    
+    with img_left_col:
+        st.markdown("<p style='font-size:12px; color:#8A99AD; margin-bottom:5px;'>💻 Desktop Device Viewport (1280x800)</p>", unsafe_allow_html=True)
+        st.image(active_target_node['desktop'], use_container_width=True)
+    with img_right_col:
+        st.markdown("<p style='font-size:12px; color:#8A99AD; margin-bottom:5px;'>📱 Mobile Device Viewport (480x800)</p>", unsafe_allow_html=True)
+        st.image(active_target_node['mobile'], use_container_width=True)
         
-        view_tab_desktop, view_tab_mobile = st.tabs(["💻 Desktop Device Viewport", "📱 Mobile Device Viewport"])
-        with view_tab_desktop:
-            st.image(active_target_node['desktop'], use_container_width=True)
-        with view_tab_mobile:
-            st.image(active_target_node['mobile'], use_container_width=True)
+    # Navigation controls
+    slide_left_col, slide_right_col = st.columns(2)
+    with slide_left_col:
+        if st.button("⬅️ Previous Scanned Page", use_container_width=True):
+            st.session_state.slideshow_index = (current_idx - 1) % len(screenshot_stack)
+            st.rerun()
+    with slide_right_col:
+        if st.button("Next Scanned Page ➡️", use_container_width=True):
+            st.session_state.slideshow_index = (current_idx + 1) % len(screenshot_stack)
+            st.rerun()
             
-        slide_left_col, slide_right_col = st.columns(2)
-        with slide_left_col:
-            if st.button("⬅️ Previous Scanned Page", use_container_width=True):
-                st.session_state.slideshow_index = (current_idx - 1) % len(screenshot_stack)
-                st.rerun()
-        with slide_right_col:
-            if st.button("Next Scanned Page ➡️", use_container_width=True):
-                st.session_state.slideshow_index = (current_idx + 1) % len(screenshot_stack)
-                st.rerun()
-                
-        st.markdown(f"""
-            <div class="blueprint-footer">
-                <div style="font-size: 11px; color: #8A99AD; line-height: 1.6; font-family: 'Courier New', monospace;">
-                    • Responsiveness Check ..... [ <span style="color:#00FFA3;">COMPLETED</span> ]<br>
-                    • Typography & Fonts Verify . [ <span style="color:#00FFA3;">COMPLETED</span> ]<br>
-                    • Asset Image Layout Scanner . [ <span style="color:#00FFA3;">COMPLETED</span> ]<br>
-                    • Text Letter Case Assertion . [ <span style="color:#00FFA3;">COMPLETED</span> ]
-                </div>
+    st.markdown(f"""
+        <div class="blueprint-footer">
+            <div style="font-size: 11px; color: #8A99AD; line-height: 1.6; font-family: 'Courier New', monospace;">
+                • Responsiveness Check ..... [ <span style="color:#00FFA3;">COMPLETED</span> ]<br>
+                • Typography & Fonts Verify . [ <span style="color:#00FFA3;">COMPLETED</span> ]<br>
+                • Asset Image Layout Scanner . [ <span style="color:#00FFA3;">COMPLETED</span> ]<br>
+                • Text Letter Case Assertion . [ <span style="color:#00FFA3;">COMPLETED</span> ]
             </div>
-        """, unsafe_allow_html=True)
+        </div>
+    """, unsafe_allow_html=True)
 
 else:
     st.markdown("""
         <div class="stAlert">
             <p style="margin: 0; color: #8A99AD !important; font-size: 13px;">
-                💡 <b>Ultra-Speed Mode Active</b>: Powered by multi-connection concurrency. Click <b>'Trigger Entire Site Automation'</b> to parse everything in under a minute!
+                💡 <b>Workspace Primed</b>: Click <b>'Trigger Entire Site Automation'</b> to parse everything. The stacked data layout handles any resolution safely without overlapping elements.
             </p>
         </div>
     """, unsafe_allow_html=True)
